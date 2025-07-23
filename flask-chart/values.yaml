@@ -1,0 +1,77 @@
+# Custom App Image
+image:
+  repository: minikube/flask-server
+  tag: latest
+  pullPolicy: Never
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 5000
+
+# PostgreSQL Subchart Config
+postgresql:
+  auth:
+    username: postgresql
+    password: postgresql
+    database: product_db
+  primary:
+    persistence:
+      enabled: true
+  initdbScripts:
+    init.sql: |
+      -- Create the table
+      CREATE TABLE IF NOT EXISTS products (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        price NUMERIC NOT NULL
+      );
+
+      -- Insert test data
+      INSERT INTO products (name, price) VALUES
+        ('Poultry Feed', 5000.00),
+        ('Fish Feed', 3500.00),
+        ('Antibiotic - Amoxicillin', 1200.00),
+        ('Dog Vaccine', 4500.00)
+      ON CONFLICT DO NOTHING;
+
+
+# NGINX Subchart Config
+nginx:
+  service:
+    type: ClusterIP
+    port: 8080
+  serverBlock: |
+    worker_processes 1;
+    events {
+       worker_connections 1024;
+    }
+
+    http {
+       upstream microserver {
+          server server:5000;
+      }
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    server {
+        listen       80;
+        server_name  localhost;
+
+        location / {
+            proxy_pass http://microserver;
+            proxy_set_header Host v$host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+
+    }   
+    }

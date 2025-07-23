@@ -1,0 +1,14 @@
+apiVersion: v2
+name: myapp
+description: A Helm chart for deploying my custom app with PostgreSQL and NGINX
+type: application
+version: 0.1.0
+appVersion: "1.0"
+
+dependencies:
+  - name: postgresql
+    version: latest #15.5.17
+    repository: "https://charts.bitnami.com/bitnami"
+  - name: nginx
+    version: latest #15.16.0
+    repository: "https://charts.bitnami.com/bitnami"
