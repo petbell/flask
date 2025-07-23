@@ -3,11 +3,20 @@ import psycopg2
 
 app = Flask(__name__)
 
+#db_params = {
+ #   'dbname': 'product_db',
+  #  'user': 'postgres',
+   # 'password': 'postgres',
+    #'host': 'db',
+   # 'port': '5432'
+#}
+
+# for local development, use:
 db_params = {
     'dbname': 'product_db',
-    'user': 'postgres',
-    'password': 'postgres',
-    'host': 'db',
+    'user': 'petbell',
+    'password': 'i12pose',
+    'host': 'localhost',
     'port': '5432'
 }
 
@@ -18,12 +27,14 @@ def index():
 
 @app.route('/products', methods=['GET'])
 def get_products():
+    print("Fetching all products...")
     try:
         conn = psycopg2.connect(**db_params)
         cursor = conn.cursor()
         query = "SELECT * FROM products"
         cursor.execute(query)
         products = cursor.fetchall()
+        print("Products fetched successfully.")
         cursor.close()
         return jsonify(products),200
     except Exception as e:
@@ -59,6 +70,8 @@ def add_product():
         return jsonify({"id": product_id}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+print(app.url_map)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, host='0.0.0.0')
