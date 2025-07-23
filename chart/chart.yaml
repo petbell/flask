@@ -4,7 +4,21 @@ description: Helm chart for Flask microservice
 version: 0.1.0
 appVersion: "1.0"
 dependencies:
-  - name: redis
+  - name: postgres
     version: "~17.0"
     repository: "https://charts.bitnami.com/bitnami"
-    condition: redis.enabled
+    condition: postgres.enabled
+    auth:
+      enabled: true
+      username: postgres
+      password: postgres
+      database: production_db
+      
+  - name: nginx
+    version: stable
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: nginx.enabled
+    service:
+      type: LoadBalancer
+      port: 80
+      targetPort: 80
