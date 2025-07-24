@@ -1,6 +1,6 @@
 # Custom App Image
 image:
-  repository: minikube/flask-server
+  repository: flask-server
   tag: latest
   pullPolicy: Never
 
