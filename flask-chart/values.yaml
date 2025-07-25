@@ -1,8 +1,8 @@
 # Custom App Image
 image:
-  repository: flask-server
-  tag: latest
-  pullPolicy: Never
+  repository: petbell/flask-server
+  tag: v1.0.0
+  pullPolicy: IfNotPresent
 
 replicaCount: 1
 
