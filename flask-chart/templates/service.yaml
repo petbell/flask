@@ -3,9 +3,9 @@ kind: Service
 metadata:
   name: {{ include "myapp.fullname" . }}
 spec:
-  type: {{ .Values.service.type }}
-  selector:
-    app: {{ include "myapp.name" . }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.port }}
+    - port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/name: {{ include "myapp.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
