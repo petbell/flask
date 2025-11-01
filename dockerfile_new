@@ -1,0 +1,57 @@
+# syntax=docker/dockerfile:1
+
+# ---------- Base Builder Stage ----------
+FROM python:3.12-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# System deps (optional, e.g. for psycopg2, Pillow, etc.)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only dependency file first for layer caching
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ---------- Runtime Stage ----------
+FROM python:3.12-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Create non-root user
+ARG UID=10001
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    appuser
+
+# Copy installed packages from builder to runtime
+COPY --from=builder /usr/local/lib/python3.12 /usr/local/lib/python3.12
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy app source code
+COPY . .
+
+USER appuser
+
+EXPOSE 5000
+
+# Optional: Healthcheck (useful for Docker Compose or K8s)
+HEALTHCHECK --interval=30s --timeout=5s \
+  CMD curl -f http://localhost:5000/health || exit 1
+
+# Run app using Gunicorn (4 workers, 2 threads per worker)
+CMD ["gunicorn", "-w", "4", "-t", "120", "-b", "0.0.0.0:5000", "main:app"]
